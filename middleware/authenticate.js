@@ -1,5 +1,6 @@
 function authenticateJWT(req, res, next) {
-  // JWT logic here
+  // Example: allow all requests (replace with your JWT logic)
   next();
 }
+
 module.exports = { authenticateJWT };
