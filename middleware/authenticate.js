@@ -1,6 +1,6 @@
 function authenticateJWT(req, res, next) {
-  // For now, just allow all requests.
-  // You can add your real JWT logic later.
+  // For now, allow all requests.
+  // You can add JWT verification logic here later.
   next();
 }
 
