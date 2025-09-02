@@ -1,6 +1,5 @@
-// Authentication middleware stub for Express
-
-module.exports = function (req, res, next) {
-  // Example: Allow all requests (replace with real logic)
+function authenticateJWT(req, res, next) {
+  // JWT logic here
   next();
-};
+}
+module.exports = { authenticateJWT };
