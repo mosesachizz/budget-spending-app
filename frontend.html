@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Budget Spending App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    input, select, button { margin: 0.5em 0; }
+    .hidden { display: none; }
+    table { border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; }
+  </style>
+</head>
+<body>
+  <div id="auth">
+    <h2>Register</h2>
+    <input type="text" id="register-username" placeholder="Username">
+    <input type="password" id="register-password" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <h2>Login</h2>
+    <input type="text" id="login-username" placeholder="Username">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <div id="auth-message"></div>
+  </div>
+
+  <div id="app" class="hidden">
+    <button onclick="logout()">Logout</button>
+    <h1>Monthly Expenses</h1>
+    <form onsubmit="addExpense(event)">
+      <label>
+        Date:
+        <input type="date" id="date" required>
+      </label>
+      <label>
+        Category:
+        <select id="category">
+          <option value="Food">Food</option>
+          <option value="Transport">Transport</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Bills">Bills</option>
+          <option value="Other">Other</option>
+        </select>
+      </label>
+      <label>
+        Amount ($):
+        <input type="number" id="amount" min="0" step="0.01" required>
+      </label>
+      <button type="submit">Add Expense</button>
+    </form>
+    <h2>Expenses This Month</h2>
+    <table id="expenses-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Amount ($)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <h2>Total: $<span id="total"></span></h2>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+    let token = localStorage.getItem('token');
+
+    function showApp() {
+      document.getElementById('auth').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      loadExpenses();
+    }
+
+    function showAuth() {
+      document.getElementById('auth').classList.remove('hidden');
+      document.getElementById('app').classList.add('hidden');
+    }
+
+    if (token) showApp();
+
+    async function register() {
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      document.getElementById('auth-message').textContent = data.message || data.error;
+    }
+
+    async function login() {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        localStorage.setItem('token', token);
+        showApp();
+      } else {
+        document.getElementById('auth-message').textContent = data.error;
+      }
+    }
+
+    function logout() {
+      token = null;
+      localStorage.removeItem('token');
+      showAuth();
+    }
+
+    async function addExpense(e) {
+      e.preventDefault();
+      const date = document.getElementById('date').value;
+      const category = document.getElementById('category').value;
+      const amount = document.getElementById('amount').value;
+      await fetch(`${API_BASE}/expenses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ date, category, amount })
+      });
+      document.getElementById('date').value = '';
+      document.getElementById('amount').value = '';
+      loadExpenses();
+    }
+
+    async function loadExpenses() {
+      const res = await fetch(`${API_BASE}/expenses/monthly`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const tbody = document.querySelector('#expenses-table tbody');
+      tbody.innerHTML = '';
+      data.expenses.forEach(exp => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${exp.date.slice(0,10)}</td><td>${exp.category}</td><td>${exp.amount.toFixed(2)}</td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('total').textContent = data.total.toFixed(2);
+    }
+  </script>
+</body>
+</html>

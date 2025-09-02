@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Budget Spending App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    input, select, button { margin: 0.5em 0; }
+    table { border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; }
+  </style>
+</head>
+<body>
+  <h1>Monthly Budget Spending App</h1>
+  <form id="expense-form">
+    <label>
+      Date:
+      <input type="date" id="date" required>
+    </label>
+    <label>
+      Category:
+      <select id="category">
+        <option value="Food">Food</option>
+        <option value="Transport">Transport</option>
+        <option value="Entertainment">Entertainment</option>
+        <option value="Bills">Bills</option>
+        <option value="Other">Other</option>
+      </select>
+    </label>
+    <label>
+      Amount ($):
+      <input type="number" id="amount" min="0" step="0.01" required>
+    </label>
+    <button type="submit">Add Expense</button>
+  </form>
+  <h2>Expenses</h2>
+  <table id="expenses-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Amount ($)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <h2>Total Spent This Month: $<span id="total"></span></h2>
+  <script>
+    const expenses = [];
+    const form = document.getElementById("expense-form");
+    const tableBody = document.querySelector("#expenses-table tbody");
+    const totalDisplay = document.getElementById("total");
+
+    function updateTable() {
+      tableBody.innerHTML = "";
+      let total = 0;
+      const currentMonth = new Date().getMonth();
+      expenses.forEach(expense => {
+        const expenseDate = new Date(expense.date);
+        if (expenseDate.getMonth() === currentMonth) {
+          total += expense.amount;
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${expense.date}</td><td>${expense.category}</td><td>${expense.amount.toFixed(2)}</td>`;
+          tableBody.appendChild(row);
+        }
+      });
+      totalDisplay.textContent = total.toFixed(2);
+    }
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const date = document.getElementById("date").value;
+      const category = document.getElementById("category").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      expenses.push({ date, category, amount });
+      updateTable();
+      form.reset();
+    });
+
+    updateTable();
+  </script>
+</body>
+</html>
